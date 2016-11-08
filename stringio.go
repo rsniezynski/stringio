@@ -7,6 +7,7 @@ package stringio
 import (
 	"errors"
 	"fmt"
+	"io"
 	"syscall"
 )
 
@@ -144,7 +145,7 @@ func (s *StringIO) Read(b []byte) (n int, err error) {
 		return 0, OSError
 	}
 	if s.pos >= len(s.buf) {
-		return 0, errors.New("eof")
+		return 0, io.EOF
 	}
 	return s.readBytes(b)
 }
@@ -182,12 +183,13 @@ func (s *StringIO) WriteString(str string) (ret int, err error) {
 // private methods
 func (s *StringIO) readBytes(b []byte) (n int, err error) {
 	if s.pos > s.last {
-		return 0, nil
+		return 0, io.EOF
 	}
 	n = len(b)
 	// Require more than what we have only get what we have.
 	// In other words, empty bytes will not be sent out.
 	if s.pos+n > s.last {
+		err = io.EOF
 		n = s.last - s.pos
 	}
 	copy(b, s.buf[s.pos:s.pos+n])
